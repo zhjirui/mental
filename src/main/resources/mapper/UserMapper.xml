@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+<mapper namespace="com.sjs.mental.mapper.UserMapper">
+    <resultMap id="userDtoMap" type="UserDto" autoMapping="true">
+        <id property="id" column="id"/>
+        <association property="role" javaType="Role">
+            <id property="id" column="role_id"/>
+            <result property="name" column="role_name"/>
+            <result property="code" column="role_code"/>
+        </association>
+        <association property="department" javaType="Department" resultMap="departmentMap"/>
+    </resultMap>
+    <resultMap id="departmentMap" type="Department">
+        <id  property="id" column="department_id"/>
+        <result property="parentId" column="department_parentId"/>
+        <result property="name" column="department_name" />
+        <result property="code" column="department_code" />
+        <result property="remark" column="department_remark"/>
+    </resultMap>
+    <select id="findByUsername" resultType="User">
+        select a.* from t_user a where a.username=#{username}
+    </select>
+
+    <select id="list" parameterType="map" resultMap="userDtoMap">
+        select
+         user.id as id,
+         user.roleId as roleId,
+         user.departmentId as departmentId,
+         user.username as username,
+         user.password as password,
+         user.name as name,
+         user.phone as phone,
+         user.birthday as birthday,
+         user.gender as gender,
+         user.status as status,
+         user.createTime as createTime,
+         user.updateTime as updateTime,
+         department.id as department_id,
+         department.parentId as department_parentId,
+         department.name as department_name,
+         department.code as department_code,
+         department.remark as department_remark,
+         role.id as role_id,
+         role.name as role_name,
+         role.code as role_code
+        from t_user user
+        left join t_department department on user.departmentId = department.id
+        left join t_role role on user.roleId = role.id
+        where 1=1
+        <if test="id !=null and id != '' ">
+            and user.id = #{id}
+        </if>
+        <if test="departmentId !=null and departmentId != '' ">
+            and user.departmentId = #{departmentId}
+        </if>
+        <if test="roleId !=null and roleId != '' ">
+            and user.roleId = #{roleId}
+        </if>
+        <if test="status !=null and status != '' ">
+            and user.status = #{status}
+        </if>
+        <if test="queryString !=null and queryString != '' ">
+            and( user.username like concat('%',#{queryString},'%')
+            or user.name like concat('%',#{queryString},'%')
+            or user.phone like concat('%',#{queryString},'%')
+            )
+        </if>
+    </select>
+
+    <select id="listUserMenus" parameterType="string" resultType="Menu">
+        select t3.*
+        from t_user t1
+        inner join t_role_menu t2 on t1.roleId = t2.roleId
+        inner join t_menu t3 on t2.menuId = t3.id
+        where t1.id = #{id}
+        and t3.status ='Y'
+        order by t3.rank asc
+    </select>
+
+</mapper>
+
+  
